@@ -1,0 +1,15 @@
+# Environment variables
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Service account files
+*.json
+
+# Output
+query_stats.csv
+query_stats_concurrent_users.csv 
+query_stats_run_in_parallel.csv

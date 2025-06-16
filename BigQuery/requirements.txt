@@ -1,0 +1,4 @@
+google-cloud-bigquery
+python-dotenv
+pip install numpy
+pip install pandas
