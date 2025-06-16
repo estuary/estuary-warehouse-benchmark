@@ -1,0 +1,24 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment files
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Data files
+*.csv
+*.json
+*.xlsx
+*.xls
+
+# Logs
+*.log
+
+# OS specific files
+.DS_Store
+Thumbs.db 
