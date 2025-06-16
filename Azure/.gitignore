@@ -1,0 +1,21 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables
+.env
+
+# Virtual Environment
+venv/
+env/
+
+# Logs
+*.log
+
+# CSV outputs
+*.csv
+
+# Credentials
+*.key
+*.pem 
