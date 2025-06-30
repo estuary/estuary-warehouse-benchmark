@@ -1,3 +1,10 @@
+"""
+Redshift Query Performance Monitoring Script
+
+This script executes SQL queries on Redshift and measures their performance metrics,
+including response time and official execution time. Results are saved to a CSV file.
+"""
+
 import pyodbc
 import pandas as pd
 import time
@@ -7,11 +14,22 @@ import os
 from dotenv import load_dotenv
 from queries import queries
 
+# Load environment variables
 load_dotenv()
 
+
 def run_query_and_save_metrics(cur, query_description, query, query_tag):
+    """
+    Execute a query and save performance metrics to CSV.
+    
+    Args:
+        cur: Redshift cursor instance
+        query_description: Human-readable description of the query
+        query: SQL query string to execute
+        query_tag: Tag for categorizing results
+    """
     try:
-        print(f"\n\nRunning this query = {query_description}\n")
+        print(f"\nRunning query: {query_description}\n")
         
         # Clear cache before execution
         try:
@@ -32,8 +50,7 @@ def run_query_and_save_metrics(cur, query_description, query, query_tag):
         end_time = time.time()
 
         # Converting to milliseconds
-        response_time =round((end_time - start_time) * 1000, 2)
-    
+        response_time = round((end_time - start_time) * 1000, 2)
 
         # Add a small delay to ensure system table is updated
         time.sleep(1)
@@ -75,11 +92,11 @@ def run_query_and_save_metrics(cur, query_description, query, query_tag):
                         elapsed_time_microsec = float(time_result[2]) if time_result[2] is not None else 0
                         
                         # Use elapsed_time if available, otherwise use execution_time
-                        redshift_official_time =elapsed_time_microsec /1000   # Convert to milliseconds
+                        redshift_official_time = elapsed_time_microsec / 1000   # Convert to milliseconds
                         
                         print(f"Query ID: {time_result[0]}")
-                        print(f"Execution time: {execution_time_microsec/1000 } ms")
-                        print(f"Elapsed time: {elapsed_time_microsec/1000 } ms")
+                        print(f"Execution time: {execution_time_microsec/1000} ms")
+                        print(f"Elapsed time: {elapsed_time_microsec/1000} ms")
                         print(f"Queue time: {float(time_result[3]) / 1000 if time_result[3] is not None else 0} ms")
                         print(f"Planning time: {float(time_result[4]) / 1000 if time_result[4] is not None else 0} ms")
                         
@@ -104,8 +121,8 @@ def run_query_and_save_metrics(cur, query_description, query, query_tag):
         # Prepare data to append
         query_metrics = {
             'query_description': query_description,
-            'response_time_ms': response_time ,
-            'redshift_official_time_in_milli_sec': redshift_official_time ,
+            'response_time_ms': response_time,
+            'redshift_official_time_in_milli_sec': redshift_official_time,
             'rows_produced': len(result) if result else 0,
             'run_type': 'Linear',
             'query_tag': query_tag,
@@ -121,8 +138,10 @@ def run_query_and_save_metrics(cur, query_description, query, query_tag):
 
         # Open the CSV file in append mode and write the data
         with open(output_file, mode='a', newline='') as file:
-            fieldnames = ['query_description', 'response_time_ms', 'redshift_official_time_in_milli_sec', 
-                        'rows_produced', 'run_type', 'query_tag', 'database', 'query_id']
+            fieldnames = [
+                'query_description', 'response_time_ms', 'redshift_official_time_in_milli_sec', 
+                'rows_produced', 'run_type', 'query_tag', 'database', 'query_id'
+            ]
             
             writer = csv.DictWriter(file, fieldnames=fieldnames)
 
@@ -133,15 +152,28 @@ def run_query_and_save_metrics(cur, query_description, query, query_tag):
             # Write the query metrics to the CSV
             writer.writerow(query_metrics)
 
-        print(f"\nMetrics saved to {output_file}")
+        print(f"Metrics saved to {output_file}")
 
     except Exception as e:
         print(f"Unexpected error in 'run_query_and_save_metrics': {e}")
 
+
 def main():
+    """
+    Main function to execute all benchmark queries.
+    
+    Retrieves environment variables, establishes Redshift connection,
+    and executes all queries in the queries list.
+    """
     try:
-        # Get env variables
+        # Get environment variables
         query_tag = os.getenv("QUERY_TAG")
+
+        # Validate required environment variables
+        required_vars = ["REDSHIFT_HOST", "REDSHIFT_DATABASE", "REDSHIFT_USER", "REDSHIFT_PASSWORD"]
+        missing_vars = [var for var in required_vars if not os.getenv(var)]
+        if missing_vars:
+            raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
 
         # Build connection string
         conn_str = f'''Driver={{Amazon Redshift (x64)}}; 
@@ -155,8 +187,12 @@ def main():
         # Connect to Redshift
         conn = pyodbc.connect(conn_str)
         
-        # Establish Connection
+        # Establish connection
         cur = conn.cursor()
+
+        print(f"Connected to Redshift host: {os.getenv('REDSHIFT_HOST')}")
+        print(f"Using database: {os.getenv('REDSHIFT_DATABASE')}")
+        print(f"Query tag: {query_tag}")
 
         try:
             # Iterate through the queries and execute them
@@ -182,6 +218,7 @@ def main():
             # Close connection
             conn.close()
             print("Connection closed.")
+
 
 if __name__ == "__main__":
     main()

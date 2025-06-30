@@ -1,11 +1,16 @@
-# All Snowlfake queries used for Benchmark Report can be found here.
+"""
+All Snowflake queries used for Benchmark Report can be found here.
+"""
+
 from dotenv import load_dotenv
 import os
 
+# Load environment variables
 load_dotenv()
 
-snowflake_database=os.getenv("SNOWFLAKE_DATABASE")
-snowflake_schema=os.getenv("SNOWFLAKE_SCHEMA")
+# Get environment variables
+snowflake_database = os.getenv("SNOWFLAKE_DATABASE")
+snowflake_schema = os.getenv("SNOWFLAKE_SCHEMA")
 
 queries = [
     ("Query-1", f"""
@@ -838,7 +843,6 @@ final_supplier_report AS (
         spp.category_diversity,
         spp.avg_supply_chain_redundancy,
         spp.premium_part_percentage,
-        spp.inventory_turnover_ratio,
         sca.sentiment,
         sca.comment_length,
         sca.positive_mentions,
@@ -855,8 +859,7 @@ final_supplier_report AS (
     LEFT JOIN supplier_comment_analysis sca ON sdm.s_suppkey = sca.s_suppkey
 )
 
-SELECT * FROM final_supplier_report limit 1000;
-
+SELECT * FROM final_supplier_report LIMIT 1000;
     """)
 ]
 

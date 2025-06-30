@@ -1,3 +1,10 @@
+"""
+Snowflake Query Performance Monitoring Script
+
+This script executes SQL queries on Snowflake and measures their performance metrics,
+including response time, bytes scanned, and credits used. Results are saved to a CSV file.
+"""
+
 import snowflake.connector
 import pandas as pd
 import time
@@ -7,16 +14,26 @@ import os
 from dotenv import load_dotenv
 from queries import queries
 
+# Load environment variables
 load_dotenv()
 
 
-def run_query_and_save_metrics(cur,query_description,query,warehouse,snowflake_database,query_tag):
-
+def run_query_and_save_metrics(cur, query_description, query, warehouse, snowflake_database, query_tag):
+    """
+    Execute a query and save performance metrics to CSV.
+    
+    Args:
+        cur: Snowflake cursor instance
+        query_description: Human-readable description of the query
+        query: SQL query string to execute
+        warehouse: Snowflake warehouse name
+        snowflake_database: Snowflake database name
+        query_tag: Tag for categorizing results
+    """
     try:
+        cur.execute(f"USE WAREHOUSE {warehouse};")
 
-        cur.execute(f""" Use WAREHOUSE {warehouse};""")
-
-        print(f"\n\nRunning this query = {query_description}\n")
+        print(f"\nRunning query: {query_description}\n")
 
         # Record query start time
         start_time = time.time()
@@ -56,10 +73,10 @@ def run_query_and_save_metrics(cur,query_description,query,warehouse,snowflake_d
             'mb_scanned': round(metrics[2], 4) if metrics and metrics[2] else 0,
             'rows_produced': metrics[3] if metrics else None,
             'credits_used': metrics[4] if metrics else None,
-            'warehouse':warehouse,
-            'query_id':query_id,
-            'run_type':'Linear',
-            'query_tag':query_tag
+            'warehouse': warehouse,
+            'query_id': query_id,
+            'run_type': 'Linear',
+            'query_tag': query_tag
         }
 
         # Define CSV file path
@@ -70,8 +87,10 @@ def run_query_and_save_metrics(cur,query_description,query,warehouse,snowflake_d
 
         # Open the CSV file in append mode and write the data
         with open(output_file, mode='a', newline='') as file:
-            fieldnames = ['query_description', 'response_time_ms', 'snowflake_official_time_in_milli_sec', 
-                        'mb_scanned', 'rows_produced', 'credits_used','warehouse','query_id','run_type','query_tag']
+            fieldnames = [
+                'query_description', 'response_time_ms', 'snowflake_official_time_in_milli_sec', 
+                'mb_scanned', 'rows_produced', 'credits_used', 'warehouse', 'query_id', 'run_type', 'query_tag'
+            ]
             
             writer = csv.DictWriter(file, fieldnames=fieldnames)
 
@@ -82,23 +101,28 @@ def run_query_and_save_metrics(cur,query_description,query,warehouse,snowflake_d
             # Write the query metrics to the CSV
             writer.writerow(query_metrics)
 
-        print(f"\nMetrics saved to {output_file}")
+        print(f"Metrics saved to {output_file}")
 
     except Exception as e:
         print(f"Unexpected error in 'run_query_and_save_metrics': {e}")
 
-    
-
-
 
 def main():
-
+    """
+    Main function to execute all benchmark queries.
+    
+    Retrieves environment variables, establishes Snowflake connection,
+    and executes all queries in the queries list.
+    """
     try:
+        # Get environment variables
+        warehouse = os.getenv("SNOWFLAKE_WAREHOUSE")
+        snowflake_database = os.getenv("SNOWFLAKE_DATABASE")
+        query_tag = os.getenv("QUERY_TAG")
 
-        # Get env variables
-        warehouse=os.getenv("SNOWFLAKE_WAREHOUSE")
-        snowflake_database=os.getenv("SNOWFLAKE_DATABASE")
-        query_tag=os.getenv("QUERY_TAG")
+        # Validate required environment variables
+        if not all([warehouse, snowflake_database]):
+            raise ValueError("Missing required environment variables. Please check SNOWFLAKE_WAREHOUSE and SNOWFLAKE_DATABASE.")
 
         # Connect to Snowflake
         conn = snowflake.connector.connect(
@@ -107,30 +131,33 @@ def main():
             account=os.getenv("SNOWFLAKE_ACCOUNT"),
             warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
             session_parameters={
-                                'QUERY_TAG': query_tag
-                                }
+                'QUERY_TAG': query_tag
+            }
         )
         
-        # Establish Connection
+        # Establish connection
         cur = conn.cursor()
 
+        print(f"Connected to Snowflake account: {os.getenv('SNOWFLAKE_ACCOUNT')}")
+        print(f"Using warehouse: {warehouse}")
+        print(f"Using database: {snowflake_database}")
+        print(f"Query tag: {query_tag}")
+
         try:
-            # This ensures that Snowflake does not use the cached results.
+            # This ensures that Snowflake does not use the cached results
             cur.execute("ALTER SESSION SET USE_CACHED_RESULT = FALSE")
 
             # Iterate through the queries and execute them
             for query_description, query in queries:
-                run_query_and_save_metrics(cur,query_description,query,warehouse,snowflake_database,query_tag)
-        
+                run_query_and_save_metrics(cur, query_description, query, warehouse, snowflake_database, query_tag)
 
         except Exception as e:
-                print(f"Error during query execution loop: {e}")
+            print(f"Error during query execution loop: {e}")
         
         finally:
             # Close cursor
             cur.close()
             print("\nCursor closed.")
-        
 
     except snowflake.connector.errors.DatabaseError as db_err:
         print(f"Database connection error: {db_err}")
@@ -140,7 +167,7 @@ def main():
     
     finally:
         if 'conn' in locals() and conn:
-            # Close connectiona
+            # Close connection
             conn.close()
             print("Connection closed.")
 

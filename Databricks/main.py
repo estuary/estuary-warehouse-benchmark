@@ -1,3 +1,10 @@
+"""
+Databricks Query Performance Monitoring Script
+
+This script executes SQL queries on Databricks and measures their performance metrics,
+including response time. Results are saved to a CSV file.
+"""
+
 from databricks import sql
 from dotenv import load_dotenv
 import os
@@ -8,8 +15,16 @@ import csv
 # Load environment variables from .env file
 load_dotenv()
 
-def run_query_and_save_metrics(cur, query_description, query,warehouse):
+def run_query_and_save_metrics(cur, query_description, query, warehouse):
+    """
+    Execute a query and save performance metrics to CSV.
     
+    Args:
+        cur: Databricks cursor instance
+        query_description: Human-readable description of the query
+        query: SQL query string to execute
+        warehouse: Databricks warehouse name
+    """
     print(f"\nExecuting: {query_description}\n")
    
     # Record query start time
@@ -31,8 +46,8 @@ def run_query_and_save_metrics(cur, query_description, query,warehouse):
     query_metrics = {
         'query_description': query_description,
         'response_time_ms': response_time,
-        'warehouse':warehouse,
-        'run_type':'Linear'
+        'warehouse': warehouse,
+        'run_type': 'Linear'
     }
 
     output_file = 'Databricks/query_stats.csv'
@@ -54,12 +69,13 @@ def run_query_and_save_metrics(cur, query_description, query,warehouse):
         writer.writerow(query_metrics)
 
 
-
-
-
-
-
 def main():
+    """
+    Main function to execute all benchmark queries.
+    
+    Retrieves environment variables, establishes Databricks connection,
+    and executes all queries in the queries list.
+    """
     # Retrieve values from .env
     server_hostname = os.getenv("SERVER_HOSTNAME")
     http_path = os.getenv("HTTP_PATH")
@@ -68,6 +84,9 @@ def main():
     schema = os.getenv("SCHEMA")
     warehouse = os.getenv("WAREHOUSE")
 
+    # Validate required environment variables
+    if not all([server_hostname, http_path, access_token]):
+        raise ValueError("Missing required environment variables. Please check SERVER_HOSTNAME, HTTP_PATH, and ACCESS_TOKEN.")
 
     # Establish connection
     connection = sql.connect(
@@ -78,33 +97,26 @@ def main():
 
     cur = connection.cursor()
 
+    print(f"Connected to Databricks server: {server_hostname}")
+    print(f"Using database: {database}")
+    print(f"Using schema: {schema}")
+    print(f"Using warehouse: {warehouse}")
+
     try:
-
-
-
-
         for query_description, query in queries:
-
-            run_query_and_save_metrics(cur,query_description,query,warehouse)
-            
-            
-    
+            run_query_and_save_metrics(cur, query_description, query, warehouse)
     
     except Exception as e:
         print(f"\nError executing query: {e}\n")
-    
     
     finally:
         # Close cursor
         cur.close()
         print("\nCursor closed.\n")
+        
     # Close connection
     connection.close()
     print("\nConnection closed.\n")
-
-
-
-
 
 
 if __name__ == "__main__":

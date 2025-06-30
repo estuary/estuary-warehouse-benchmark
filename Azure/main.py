@@ -1,11 +1,30 @@
+"""
+Azure Fabric Query Performance Monitoring Script
+
+This script executes SQL queries on Azure Fabric and measures their performance metrics,
+including response time. Results are saved to a CSV file.
+"""
+
 import pyodbc
 import os
 import time
 import csv
 from dotenv import load_dotenv
-from queries import queries  
+from queries import queries
+
 
 def run_query_and_save_metrics(conn, description, query, database_name, csv_file_name, query_tag):
+    """
+    Execute a query and save performance metrics to CSV.
+    
+    Args:
+        conn: Database connection instance
+        description: Human-readable description of the query
+        query: SQL query string to execute
+        database_name: Database name
+        csv_file_name: Output CSV file name
+        query_tag: Tag for categorizing results
+    """
     print(f"Running query: {description}")
     start = time.time()
     duration_milliseconds = -1
@@ -41,11 +60,17 @@ def run_query_and_save_metrics(conn, description, query, database_name, csv_file
                 file_exists = True  # Ensure headers are marked as written
             csv_writer.writerow([description, duration_milliseconds, database_name, query_tag, str(e)])
 
+
 def main():
-    """Main entrypoint for connecting and running queries."""
+    """
+    Main function to execute all benchmark queries.
+    
+    Retrieves environment variables, establishes Azure Fabric connection,
+    and executes all queries in the queries list.
+    """
     load_dotenv()  
 
-    
+    # Get environment variables
     driver = os.getenv('driver')
     server = os.getenv('server')
     database = os.getenv('database')
@@ -53,7 +78,11 @@ def main():
     password = os.getenv('password')
     query_tag = os.getenv('query_tag')
 
-    
+    # Validate required environment variables
+    if not all([driver, server, database, username, password]):
+        raise ValueError("Missing required environment variables. Please check driver, server, database, username, and password.")
+
+    # Build connection string
     conn_str = (
         f"DRIVER={driver};"
         f"SERVER={server};"
@@ -68,14 +97,17 @@ def main():
     try:
         conn = pyodbc.connect(conn_str)
         print("Successfully connected to the database.")
+        print(f"Connected to server: {server}")
+        print(f"Using database: {database}")
+        print(f"Query tag: {query_tag}")
 
-        
+        # Execute all queries
         for description, query in queries:
             try:
                 run_query_and_save_metrics(conn, description, query, database, csv_file_name, query_tag)
             except Exception as inner_e:
                 print(f"Unexpected error during query '{description}': {inner_e}")
-            time.sleep(3)  
+            time.sleep(3)  # Small delay between queries
 
         print("All queries completed")
 
@@ -87,6 +119,7 @@ def main():
         if conn:
             conn.close()
             print("Connection closed")
+
 
 if __name__ == "__main__":
     main()

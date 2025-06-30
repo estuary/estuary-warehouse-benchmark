@@ -1,3 +1,10 @@
+"""
+BigQuery Query Performance Monitoring Script
+
+This script executes SQL queries on BigQuery and measures their performance metrics,
+including response time, bytes scanned, and rows produced. Results are saved to a CSV file.
+"""
+
 from google.cloud import bigquery
 import time
 from datetime import datetime
@@ -7,27 +14,36 @@ import json
 from dotenv import load_dotenv
 from queries import queries
 
-
+# Load environment variables
 load_dotenv()
 
 
-
 def run_query_and_save_metrics(client, query_description, query, project_id, dataset, query_tag):
+    """
+    Execute a query and save performance metrics to CSV.
+    
+    Args:
+        client: BigQuery client instance
+        query_description: Human-readable description of the query
+        query: SQL query string to execute
+        project_id: BigQuery project ID
+        dataset: BigQuery dataset name
+        query_tag: Tag for categorizing results
+    """
     try:
-        print(f"\n\nRunning this query = {query_description}\n")
-
-
+        print(f"\nRunning query: {query_description}\n")
 
         # Configure the job with query configuration
         job_config = bigquery.QueryJobConfig(
             use_query_cache=False,  # Don't use cached results
             labels={"query_tag": query_tag.replace("-", "_").lower()}  # BigQuery labels can't contain dashes
         )
+        
         # Record query start time in milliseconds
         start_time = time.time() * 1000
+        
         # Execute the query
         query_job = client.query(query, job_config=job_config)
-        #result = query_job.result()  # Wait for the query to complete
 
         # Record query end time in milliseconds
         end_time = time.time() * 1000
@@ -67,8 +83,10 @@ def run_query_and_save_metrics(client, query_description, query, project_id, dat
 
         # Open the CSV file in append mode and write the data
         with open(output_file, mode='a', newline='') as file:
-            fieldnames = ['query_description', 'response_time_ms', 'bigquery_official_time_in_milli_sec', 
-                          'mb_scanned', 'rows_produced', 'project_id', 'job_id', 'run_type', 'query_tag']
+            fieldnames = [
+                'query_description', 'response_time_ms', 'bigquery_official_time_in_milli_sec', 
+                'mb_scanned', 'rows_produced', 'project_id', 'job_id', 'run_type', 'query_tag'
+            ]
             
             writer = csv.DictWriter(file, fieldnames=fieldnames)
 
@@ -79,25 +97,39 @@ def run_query_and_save_metrics(client, query_description, query, project_id, dat
             # Write the query metrics to the CSV
             writer.writerow(query_metrics)
 
-        print(f"\nMetrics saved to {output_file}")
+        print(f"Metrics saved to {output_file}")
 
     except Exception as e:
         print(f"Unexpected error in 'run_query_and_save_metrics': {e}")
 
 
 def main():
+    """
+    Main function to execute all benchmark queries.
+    
+    Retrieves environment variables, establishes BigQuery connection,
+    and executes all queries in the queries list.
+    """
     try:
-        # Get env variables
+        # Get environment variables
         project_id = os.getenv("BIGQUERY_PROJECT_ID")
         dataset = os.getenv("BIGQUERY_DATASET")
         query_tag = os.getenv("QUERY_TAG")
         credentials_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
+        # Validate required environment variables
+        if not all([project_id, dataset, credentials_path]):
+            raise ValueError("Missing required environment variables. Please check BIGQUERY_PROJECT_ID, BIGQUERY_DATASET, and GOOGLE_APPLICATION_CREDENTIALS.")
 
         # Create BigQuery client with service account
         client = bigquery.Client.from_service_account_json(
             credentials_path,
             project=project_id
         )
+        
+        print(f"Connected to BigQuery project: {project_id}")
+        print(f"Using dataset: {dataset}")
+        print(f"Query tag: {query_tag}")
         
         try:
             # Iterate through the queries and execute them

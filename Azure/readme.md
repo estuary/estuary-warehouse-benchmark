@@ -1,13 +1,13 @@
-# Fabric Query Performance Monitoring Executing Script
+# Fabric Query Performance Monitoring Script
 
 ## Overview
 
-This repo has one Python script to execute the SQL queries linearly and an environment file to plug in credentials.
+This repository contains a Python script to execute SQL queries linearly and an environment file for credentials configuration.
 
-| Sno | File Name   | Comment          |
-|-----|------------|------------------|
+| No. | File Name   | Description          |
+|-----|------------|---------------------|
 | 1   | `main.py`  | Runs all SQL queries linearly |
-| 2   | `.env`  | Takes in your credentials |
+| 2   | `.env`  | Contains your credentials |
 
 ## Getting Started
 
@@ -35,40 +35,37 @@ To use this Azure Python script, you need a Microsoft driver. On Ubuntu, follow 
 
 Refer to the [official Microsoft documentation](https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server) for more details.
 
-To run the Fabric benchmark, plug in your own credentials by setting the following environment variables:
+To run the Fabric benchmark, configure your credentials by setting the following environment variables:
 
 ```bash
-server = 'your_server' -> looks like your_account-ondemand.sql.azuresynapse.net
-database = 'xsmall'
-schema = 'tpch'
-username = 'your_username' -> looks like sqladminuser@your_account
-password = 'yourpassword'
-driver = '{ODBC Driver 17 for SQL Server}'
-query_tag = 'Dw100c'
-
+server=your_server  # e.g., your_account-ondemand.sql.azuresynapse.net
+database=xsmall
+schema=tpch
+username=your_username  # e.g., sqladminuser@your_account
+password=your_password
+driver={ODBC Driver 17 for SQL Server}
+query_tag=Dw100c
 ```
 
 ## Setup
 
-Install the required dependencies mentioned inside the Fabric folder.
+Install the required dependencies in the Fabric folder:
 
 ```bash
 pip install -r requirements.txt
-
 ```
-## Running the code 
 
-Inside the Fabric folder run
+## Running the Code
+
+Inside the Fabric folder, run:
 
 ```bash
 python main.py
 ```
 
+## Output
 
-
-Queries used for the Benchmark Report can be found [here](queries.py).
-
-
-Benchmark report response time will be recorded in `query_stats.csv` file.
+- Queries used for the benchmark report can be found in [`queries.py`](queries.py).
+- Benchmark response times will be recorded in the `query_stats.csv` file.
 
 
