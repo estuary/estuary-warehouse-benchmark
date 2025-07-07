@@ -1,5 +1,7 @@
 # **Estuary Benchmark Report**
 
+👉 Check out the full report here: https://estuary.dev/data-warehouse-benchmark-report/
+
 Our goal with this benchmark report is to equip you with the technical tools and insights needed to run your own tests and determine which data warehouse best fits your specific needs.
 
 We've designed this repository so that even semi-technical users can easily run the benchmarks and draw meaningful insights.
@@ -24,7 +26,9 @@ For instructions on running Python code for a specific data warehouse, refer to 
 
 ## **Architecture**
 
-<img width="779" alt="Architecture diagram" src="https://github.com/user-attachments/assets/b824fcf3-438e-46d7-9b90-721a56a1f156" />
+## **Architecture Diagram**
+
+![Architecture Diagram](study-architecture-main.png)
 
 ## **Deployed Environment**
 
@@ -91,7 +95,8 @@ For instructions on running Python code for a specific data warehouse, refer to 
 - Estuary has 200+ built-in connectors.
 - Estuary moves 1 petabyte per month while maintaining 99.9% uptime and less than 100 milliseconds of latency.
 
-<img width="572" alt="Estuary platform overview" src="https://github.com/user-attachments/assets/be04d71c-0cc5-4973-993d-6795bdc44646" />
+![Estuary](estuary-main.png)
+
 
 ## **Interested in trying out Estuary?**
 
